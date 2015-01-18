@@ -1,7 +1,9 @@
 mediacomMP82S4
 ==============
 
-My work to compile a working linux kernel for various chinese rebranded tablets , like Mediacom Smartpad S4 8.0 , Prestigio PMP5785c and Yarvik Noble 7.85"
+My fork oriented for Prestigio PMP5785c.
+
+Based on tizbac/mediacomMP82S4 work to compile a working linux kernel for various chinese rebranded tablets, like Mediacom Smartpad S4 8.0, Prestigio PMP5785c and Yarvik Noble 7.85".
 
 To compile:
 -----------
@@ -11,11 +13,11 @@ git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/
 
 Put the correct path to the toolchain in build.sh
 
-Run ./build.sh
+Run ./build.sh (use better build_yf.sh base on yftech method)
 
-And finally
+use not compressed Image like in fw.
 
-rkutils/rkcrc -k kernel/arch/arm/boot/Image kernel.img
+not tested yet.
 
-Now you are ready to flash the kernel image using rkflashkit, and enjoy the black screen (i'll get it working i hope)
+
 
