@@ -88,6 +88,9 @@
 #endif
 
 #include "yfcam.c"
+
+// ========== Begin of rk3188 top board keypad defination ============
+
 #include <plat/key.h>
 
 static struct rk29_keys_button key_button[] = {
@@ -108,7 +111,7 @@ static struct rk29_keys_button key_button[] = {
 	{
 		.desc	= "vol-",
 		.code	= KEY_VOLUMEDOWN,
-		.adc_value	= 180,
+		.adc_value	= 180,				//174 sdk
 		.gpio = INVALID_GPIO,
 		.active_low = PRESS_LEV_LOW,
 	},
@@ -125,6 +128,8 @@ struct rk29_keys_platform_data rk29_keys_pdata = {
 	.nbuttons	= ARRAY_SIZE(key_button),
 	.chn	= 1,  //chn: 0-7, if do not use ADC,set 'chn' -1
 };
+
+// =========== End of rk3188 top board keypad defination  =============
 
 /*
      v1.0 : 	ignore
