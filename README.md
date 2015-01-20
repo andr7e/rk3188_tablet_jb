@@ -13,11 +13,12 @@ git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/
 
 Put the correct path to the toolchain in build.sh
 
-Run ./build.sh (use better build_yf.sh base on yftech method)
+Run ./build_yf.sh (based on yftech method)
 
 use not compressed Image like in fw.
 
-not tested yet.
+I tested it in recovery - it's works. But version 36, not 36+
+My changes, probably, not need, I can't test early.
 
 ---------------------
 
