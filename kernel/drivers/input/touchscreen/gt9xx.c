@@ -288,12 +288,12 @@ static void gtp_touch_up(struct goodix_ts_data* ts, s32 id,s32 x,s32 y)
 #if GTP_ICS_SLOT_REPORT
     input_mt_slot(ts->input_dev, id);
     input_report_abs(ts->input_dev, ABS_MT_TRACKING_ID, -1);
-    input_report_abs(ts->input_dev, ABS_MT_POSITION_X, x);
-    input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, y);
+    //input_report_abs(ts->input_dev, ABS_MT_POSITION_X, x);
+    //input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, y);
     GTP_DEBUG("Touch id[%2d] release!", id);
 #else
-    input_report_abs(ts->input_dev, ABS_MT_POSITION_X, x);
-    input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, y);
+    //input_report_abs(ts->input_dev, ABS_MT_POSITION_X, x);
+    //input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, y);
     input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0);
     input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, 0);
     input_mt_sync(ts->input_dev);
