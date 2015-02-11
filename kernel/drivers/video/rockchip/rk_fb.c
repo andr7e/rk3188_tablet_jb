@@ -29,10 +29,12 @@
 #include <linux/earlysuspend.h>
 #include <asm/div64.h>
 #include <asm/uaccess.h>
-#include<linux/rk_fb.h>
+#include <linux/rk_fb.h>
 #include <plat/ipp.h>
 #include "hdmi/rk_hdmi.h"
 #include <linux/linux_logo.h>
+
+#define OLEGK0_CHANGED_DEPTH_24 1
 
 void rk29_backlight_set(bool on);
 bool rk29_get_backlight_status(void);
@@ -481,9 +483,14 @@ static int rk_fb_blank(int blank_mode, struct fb_info *info)
 static int rk_fb_check_var(struct fb_var_screeninfo *var, struct fb_info *info)
 {
 	
-	if( 0==var->xres_virtual || 0==var->yres_virtual ||
+		if( 0==var->xres_virtual || 0==var->yres_virtual ||
+#ifdef OLEGK0_CHANGED_DEPTH_24 
+	0==var->yres || var->xres<16 || 
+	((16!=var->bits_per_pixel)&&(24!=var->bits_per_pixel)&&(32!=var->bits_per_pixel)) )
+#else 
 		 0==var->xres || 0==var->yres || var->xres<16 ||
 		 ((16!=var->bits_per_pixel)&&(32!=var->bits_per_pixel)) )
+#endif 
 	 {
 		 printk("%s check var fail 1!!! \n",info->fix.id);
 		 printk("xres_vir:%d>>yres_vir:%d\n", var->xres_virtual,var->yres_virtual);

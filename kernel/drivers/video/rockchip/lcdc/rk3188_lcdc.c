@@ -663,7 +663,7 @@ static int win1_set_par(struct rk3188_lcdc_device *lcdc_dev,rk_screen *screen,
 			   struct layer_par *par )
 {
 	u32 xact, yact, xvir, yvir, xpos, ypos;
-	u8 fmt_cfg;
+	u8 fmt_cfg = 0;
 	char fmt[9] = "NULL";
 	xact = par->xact;			
 	yact = par->yact;
