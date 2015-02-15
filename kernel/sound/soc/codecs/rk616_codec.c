@@ -1036,35 +1036,11 @@ static int rk616_playback_path_get(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
-static int rk616_playback_path_put(struct snd_kcontrol *kcontrol,
-		struct snd_ctl_elem_value *ucontrol)
+static int rk616_set_playback_path (struct snd_soc_codec *codec, long int playback_path)
 {
-	struct rk616_codec_priv *rk616 = rk616_priv;
-	struct snd_soc_codec *codec = snd_kcontrol_chip(kcontrol);
-
-	if (!rk616) {
-		printk("%s : rk616_priv is NULL\n", __func__);
-		return -EINVAL;
-	}
-
-	if (rk616->playback_path == ucontrol->value.integer.value[0]){
-		DBG("%s : playback_path is not changed!\n",__func__);
-		//return 0;
-	}
-
-	rk616->playback_path = ucontrol->value.integer.value[0];
-
-	printk("%s : set playback_path = %ld\n", __func__,
-		rk616->playback_path);
-
-	// mute output for pop noise
-	rk616_mute_speaker(1);
-	rk616_mute_headset(1);
-
-	if(get_hdmi_state())
-		return 0;
-
-	switch (rk616->playback_path) {
+	DBG("%s : playback_path = %ld\n",__func__, playback_path);
+	
+	switch (playback_path) {
 	case OFF:
 		break;
 	case RCV:
@@ -1110,6 +1086,37 @@ static int rk616_playback_path_put(struct snd_kcontrol *kcontrol,
 	}
 
 	return 0;
+}
+	
+static int rk616_playback_path_put(struct snd_kcontrol *kcontrol,
+		struct snd_ctl_elem_value *ucontrol)
+{
+	struct rk616_codec_priv *rk616 = rk616_priv;
+	struct snd_soc_codec *codec = snd_kcontrol_chip(kcontrol);
+
+	if (!rk616) {
+		printk("%s : rk616_priv is NULL\n", __func__);
+		return -EINVAL;
+	}
+
+	if (rk616->playback_path == ucontrol->value.integer.value[0]){
+		DBG("%s : playback_path is not changed!\n",__func__);
+		//return 0;
+	}
+
+	rk616->playback_path = ucontrol->value.integer.value[0];
+
+	printk("%s : set playback_path = %ld\n", __func__,
+		rk616->playback_path);
+
+	// mute output for pop noise
+	rk616_mute_speaker(1);
+	rk616_mute_headset(1);
+
+	if(get_hdmi_state())
+		return 0;
+		
+	return rk616_set_playback_path (codec, rk616->playback_path);
 }
 
 static int rk616_capture_path_get(struct snd_kcontrol *kcontrol,
@@ -2156,7 +2163,8 @@ static int rk616_codec_power_up(int type)
 		type == RK616_CODEC_PLAYBACK ? "playback" : "",
 		type == RK616_CODEC_CAPTURE ? "capture" : "");
 
-	if (type == RK616_CODEC_PLAYBACK) {
+	if (type == RK616_CODEC_PLAYBACK)
+	{
 		rk616_mute_speaker(1);
 		rk616_mute_headset(1);
 
@@ -2170,7 +2178,11 @@ static int rk616_codec_power_up(int type)
 			codec616_set_spk(!get_hdmi_state());
 		#endif
 		rk616->is_playback_powerup = true;
-	} else if (type == RK616_CODEC_CAPTURE) {
+		
+		rk616_set_playback_path (codec, rk616->playback_path);
+	} 
+	else if (type == RK616_CODEC_CAPTURE) 
+	{
 		for (i = 0; i < RK616_CODEC_CAPTURE_POWER_UP_LIST_LEN; i++) {
 			snd_soc_write(codec, capture_power_up_list[i].reg,
 				capture_power_up_list[i].value);
@@ -2267,10 +2279,15 @@ static int rk616_startup(struct snd_pcm_substream *substream,
 	DBG("%s : substream->stream : %s \n", __func__,
 		playback ? "PLAYBACK":"CAPTURE");
 
-	if (playback) {
+	if (playback)
+	{
 		if (!rk616->is_playback_powerup)
+		{
 			rk616_codec_power_up(RK616_CODEC_PLAYBACK);
-	} else {//capture
+		}
+	} 
+	else 
+	{//capture
 		cancel_delayed_work_sync(&capture_delayed_work);
 		rk616_codec_work_capture_type = RK616_CODEC_WORK_NULL;
 
