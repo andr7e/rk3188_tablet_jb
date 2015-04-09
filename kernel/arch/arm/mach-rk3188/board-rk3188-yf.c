@@ -60,10 +60,6 @@
 #include <linux/mfd/rk616.h>
 #endif
 
-#if defined(CONFIG_DP_ANX6345)
-	#include<linux/anx6345.h>
-#endif
-
 #if defined(CONFIG_RK_HDMI)
 	#include "../../../drivers/video/rockchip/hdmi/rk_hdmi.h"
 #endif
@@ -674,76 +670,6 @@ struct rk29fb_info lcdc1_screen_info = {
 int lcd_switch_lcdc(void) {
 	return env_get_u32("lcd_switch_lcdc", 1);
 }
-
-#ifdef CONFIG_DP_ANX6345
-
-	#define DVDD33_EN_PIN 		RK30_PIN0_PB0
-	#define DVDD33_EN_VALUE 	GPIO_LOW
-
-	#define DVDD18_EN_PIN 		RK30_PIN3_PD4
-	#define DVDD18_EN_VALUE 	GPIO_HIGH
-
-	#define EDP_RST_PIN 		RK30_PIN0_PA7
-	static int rk_edp_power_ctl(void)
-	{
-		int ret;
-		ret = gpio_request(DVDD33_EN_PIN, "dvdd33_en_pin");
-		if (ret != 0)
-		{
-			gpio_free(DVDD33_EN_PIN);
-			printk(KERN_ERR "request dvdd33 en pin fail!\n");
-			return -1;
-		}
-		else
-		{
-			gpio_direction_output(DVDD33_EN_PIN, DVDD33_EN_VALUE);
-		}
-		msleep(5);
-
-		ret = gpio_request(DVDD18_EN_PIN, "dvdd18_en_pin");
-		if (ret != 0)
-		{
-			gpio_free(DVDD18_EN_PIN);
-			printk(KERN_ERR "request dvdd18 en pin fail!\n");
-			return -1;
-		}
-		else
-		{
-			gpio_direction_output(DVDD18_EN_PIN, DVDD18_EN_VALUE);
-		}
-
-		ret = gpio_request(EDP_RST_PIN, "edp_rst_pin");
-		if (ret != 0)
-		{
-			gpio_free(EDP_RST_PIN);
-			printk(KERN_ERR "request rst pin fail!\n");
-			return -1;
-		}
-		else
-		{
-			gpio_direction_output(EDP_RST_PIN, GPIO_LOW);
-			msleep(50);
-			gpio_direction_output(EDP_RST_PIN, GPIO_HIGH);
-			msleep(50);
-		}
-		return 0;
-
-	}
-	static struct anx6345_platform_data anx6345_platform_data = {
-		.power_ctl 	= rk_edp_power_ctl,
-		.dvdd33_en_pin 	= DVDD33_EN_PIN,
-		.dvdd33_en_val 	= DVDD33_EN_VALUE,
-		.dvdd18_en_pin 	= DVDD18_EN_PIN,
-		.dvdd18_en_val 	= DVDD18_EN_VALUE,
-		.edp_rst_pin   	= EDP_RST_PIN,
-	};
-	static struct i2c_board_info __initdata i2c_anx6345_info = {
-		.type          = "anx6345",
-		.addr          = 0x39,
-		.flags         = 0,
-		.platform_data = &anx6345_platform_data,
-	};
-#endif
 
 static struct resource resource_fb[] = {
 	[0] = {
@@ -2316,11 +2242,7 @@ static void rk30_pm_restart(char mode, const char *cmd)
 	if(s_lcd_en2 != INVALID_GPIO) {
 		gpio_direction_output(s_lcd_en2, GPIO_HIGH);
 	}
-	if(lcd_supported("anx6345")) {
-		gpio_direction_output(EDP_RST_PIN, GPIO_LOW);
-		gpio_direction_output(DVDD18_EN_PIN, DVDD18_EN_VALUE);
-		gpio_direction_output(DVDD33_EN_PIN, DVDD33_EN_VALUE);
-	}
+
 	arm_machine_restart(mode, cmd);
 }
 
@@ -2330,11 +2252,7 @@ static void rk30_pm_power_off(void)
 	gpio_direction_output(GPIO_5V_DRV, GPIO_LOW);
 	gpio_request(LCD_EN_PIN, NULL);
 	gpio_direction_output(LCD_EN_PIN, !LCD_EN_VALUE);
-	if(lcd_supported("anx6345")) {
-		gpio_direction_output(EDP_RST_PIN, GPIO_LOW);
-		gpio_direction_output(DVDD18_EN_PIN, DVDD18_EN_VALUE);
-		gpio_direction_output(DVDD33_EN_PIN, DVDD33_EN_VALUE);
-	}
+
 	if(POWER_IND_PIN != INVALID_GPIO) {
 		gpio_direction_output(POWER_IND_PIN, GPIO_HIGH);
 	}
@@ -2780,12 +2698,6 @@ static void __init machine_rk30_board_init(void)
 
 #endif
 
-#ifdef CONFIG_DP_ANX6345
-	if(lcd_supported("anx6345")) {
-		s_lcd_en = INVALID_GPIO;
-		i2c_register_board_info(2, &i2c_anx6345_info, 1);
-	}
-#endif
 	s_lcd_en2 = env_get_u32("lcd_en2_pgio", s_lcd_en2);
 	if(s_lcd_en2 == s_lcd_en) {
 		s_lcd_en = INVALID_GPIO;
@@ -2793,7 +2705,7 @@ static void __init machine_rk30_board_init(void)
 	pm_power_off = rk30_pm_power_off;
 	arm_pm_restart = rk30_pm_restart;
 	
-        gpio_direction_output(POWER_ON_PIN, GPIO_HIGH);
+    gpio_direction_output(POWER_ON_PIN, GPIO_HIGH);
 
 
 	rk30_i2c_register_board_info();
