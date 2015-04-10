@@ -133,52 +133,15 @@ int get_harware_version()
 }
 EXPORT_SYMBOL_GPL(get_harware_version);
 
-#if defined(CONFIG_MACH_RK_YF)
-static int s_touch_reset;
-static int s_touch_int;
-#define TOUCH_RESET_PIN    s_touch_reset
-#define TOUCH_INT_PIN      s_touch_int
+#if defined(CONFIG_TOUCHSCREEN_GT9XX)
+#define TOUCH_RESET_PIN    RK30_PIN0_PB6
+#define TOUCH_INT_PIN      RK30_PIN1_PB7
 #define TOUCH_PWR_PIN      INVALID_GPIO
 
-int goodix_init_platform_hw(void)
-{
-	int ret;
-
-	if (TOUCH_PWR_PIN != INVALID_GPIO) {
-		//yf_mux_api_set(TOUCH_PWR_PIN, 0);
-		ret = gpio_request(TOUCH_PWR_PIN, "goodix power pin");
-		if (ret != 0) {
-			gpio_free(TOUCH_PWR_PIN);
-			printk("goodix request power error\n");
-			return -EIO;
-		}
-		gpio_direction_output(TOUCH_PWR_PIN, 0);
-		gpio_set_value(TOUCH_PWR_PIN, GPIO_LOW);
-		msleep(100);
-	}
-
-	if (TOUCH_RESET_PIN != INVALID_GPIO) {
-		//yf_mux_api_set(TOUCH_RESET_PIN, 0);
-		ret = gpio_request(TOUCH_RESET_PIN, "goodix reset pin");
-		if (ret != 0) {
-			gpio_free(TOUCH_RESET_PIN);
-			printk("goodix request reset error\n");
-			return -EIO;
-		}
-		gpio_direction_output(TOUCH_RESET_PIN, 1);
-		msleep(100);
-	}
-	if (TOUCH_PWR_PIN != INVALID_GPIO) {
-		//yf_mux_api_set(TOUCH_INT_PIN, 0);
-	}
-	return 0;
-}
-
 struct goodix_platform_data goodix_info = {
-	.model = 8105,
-	//.irq_pin = TOUCH_INT_PIN,
-	//.rest_pin = TOUCH_RESET_PIN,
-	.init_platform_hw = goodix_init_platform_hw,
+	//.model  = 8105,
+	.irq_pin  = TOUCH_INT_PIN,
+	.rest_pin = TOUCH_RESET_PIN,
 };
 #endif
 
@@ -1934,12 +1897,12 @@ void  rk30_pwm_resume_voltage_set(void)
 
 #ifdef CONFIG_I2C2_RK30
 static struct i2c_board_info __initdata i2c2_info[] = {
-#if defined (CONFIG_MACH_RK_YF)
+#if defined (CONFIG_TOUCHSCREEN_GT9XX)
 	{
 		.type          = "Goodix-TS",
 		.addr          = 0x5d,
 		.flags         = 0,
-		//.irq           = TOUCH_INT_PIN,
+		.irq           = TOUCH_INT_PIN,
 		.platform_data = &goodix_info,
 	},
 #endif
@@ -2524,16 +2487,9 @@ static void __init machine_rk30_board_init(void)
 		gpio_direction_output(POWER_IND_PIN, GPIO_LOW);
 	}
 
-#if defined(CONFIG_MACH_RK_YF)
-	s_touch_reset = env_get_u32("ctp_reset_gpio", RK30_PIN0_PB6);
-	s_touch_int = env_get_u32("ctp_int_gpio", RK30_PIN1_PB7);
-	goodix_info.irq_pin = TOUCH_INT_PIN;
-	goodix_info.rest_pin = TOUCH_RESET_PIN;
-	i2c2_info[0].irq = TOUCH_INT_PIN;
-#endif
 #if defined(CONFIG_MFD_RK616)
-	rk616_pdata.spk_ctl_gpio = env_get_u32("rk616_speak_ctl", RK30_PIN2_PD7);
-	rk616_pdata.hp_ctl_gpio = env_get_u32("rk616_hp_ctl", RK30_PIN2_PD7);
+	rk616_pdata.spk_ctl_gpio = RK30_PIN2_PD7;
+	rk616_pdata.hp_ctl_gpio  = RK30_PIN2_PD7;
 #endif
 #ifdef CONFIG_SSD2828_RGB2MIPI
 	
@@ -2829,20 +2785,26 @@ void __init board_clock_init(void)
 static unsigned s_ctp_ok = 0;
 int ctp_supported(char * name)
 {
+	/*
 	int supported = 0;
 	if(!s_ctp_ok) {
 		const char * ctps = env_get_str("ctp_supproted", 0);
 		supported = !ctps || strstr(ctps, name);
 	}
 	return supported;
+	*/ 
+	
+	return 0;
 }
 
 void ctp_register(char * name)
 {
+	/*
 	if(!s_ctp_ok) {
 		s_ctp_ok = 1;
 		printk("ctp %s registered\n", name);
 	}
+	*/ 
 }
 
 int rk61x_detect(struct i2c_client *client)

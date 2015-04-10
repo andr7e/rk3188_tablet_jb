@@ -145,6 +145,10 @@ config TOUCHSCREEN_GT8XX
                 default 800
                 help
                   goodix touch max y resolution
+                  
+config TOUCHSCREEN_GT9XX
+        tristate "GT9XX based touchscreens"
+        depends on I2C2_RK29 || I2C_RK30
 
 config TOUCHSCREEN_CT36X
 	tristate "CT36X based touchscreens"
