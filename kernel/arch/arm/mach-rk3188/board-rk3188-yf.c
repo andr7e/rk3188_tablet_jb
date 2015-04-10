@@ -2782,31 +2782,6 @@ void __init board_clock_init(void)
 	}
 }
 
-static unsigned s_ctp_ok = 0;
-int ctp_supported(char * name)
-{
-	/*
-	int supported = 0;
-	if(!s_ctp_ok) {
-		const char * ctps = env_get_str("ctp_supproted", 0);
-		supported = !ctps || strstr(ctps, name);
-	}
-	return supported;
-	*/ 
-	
-	return 0;
-}
-
-void ctp_register(char * name)
-{
-	/*
-	if(!s_ctp_ok) {
-		s_ctp_ok = 1;
-		printk("ctp %s registered\n", name);
-	}
-	*/ 
-}
-
 int rk61x_detect(struct i2c_client *client)
 {
 	int count = 2;
