@@ -523,37 +523,6 @@ static int s_lcd_en = RK30_PIN0_PB0;
 #define LCD_EN_PIN         s_lcd_en
 #define LCD_EN_VALUE       GPIO_LOW
 
-static void yftech_power_ctrl(bool on)
-{
-#if defined (CONFIG_KP_AXP22)
-	extern void yftech_axp_power_dc1sw(bool on);
-	if (pmic_is_axp228()) {
-		const char * ldos_name[] = {
-			"axp22_ldoio0",		// VCC_TP
-			NULL
-		};
-		const char ** p_name = ldos_name;
-
-		while (*p_name) {
-			struct regulator *regulator;
-
-			regulator = regulator_get(NULL, *p_name);
-			if (!IS_ERR_OR_NULL(regulator)) {
-				if (regulator_is_enabled(regulator) != on) {
-					int ret = on ? regulator_enable(regulator) : regulator_disable(regulator);
-				}
-				regulator_put(regulator);
-			} else {
-				printk(KERN_ERR "regulator_get(%s) error\n", *p_name);
-			}
-			++p_name;
-		}
-
-		yftech_axp_power_dc1sw(on);
-	}
-#endif
-}
-
 static int rk_fb_io_init(struct rk29_fb_setting_info *fb_setting)
 {
 	int ret = 0;
@@ -599,7 +568,7 @@ static int rk_fb_io_disable(void)
 	{
 		gpio_set_value(LCD_EN_PIN, !LCD_EN_VALUE);
 	}
-	yftech_power_ctrl(false);
+
 	return 0;
 }
 static int rk_fb_io_enable(void)
@@ -612,7 +581,7 @@ static int rk_fb_io_enable(void)
 	{
 		gpio_set_value(LCD_EN_PIN, LCD_EN_VALUE);
 	}
-	yftech_power_ctrl(true);
+
 	return 0;
 }
 
@@ -1663,103 +1632,6 @@ static  struct pmu_info  act8846_ldo_info[] = {
 #include "../mach-rk30/board-pmu-act8846.c"
 #endif
 
-#if defined (CONFIG_KP_AXP22) ///add by wangjian
-#include "../../../drivers/power/axp_power/axp22-board.c"
-
-static struct pmu_info  axp228_dcdc_info[] = {
-	{
-		.name          = "axp22_dcdc1",   //vcc_io 3.0 
-		.min_uv          = 3000000,
-		.max_uv         = 3000000,
-	},
-	{
-		.name          = "vdd_cpu",//"axp22_dcdc2"// avdd_com 1.1v 
-		.min_uv          = 1100000,
-		.max_uv          = 1100000,
-	},
-	{
-		.name          = "vdd_core",//"axp22_dcdc3"//vdd_log 1.1v 
-		.min_uv          = 1100000,
-		.max_uv         = 1100000,
-	},
-	//{
-	//	.name          = "axp_dcdc4",   //not used
-	//	.min_uv          = 3000000,
-	//	.max_uv         = 3000000,
-	//},
-	{
-		.name          = "axp22_dcdc5",   //vcc_ddr 1.5v
-		.min_uv          = 1500000,
-		.max_uv         = 1500000,
-	},
-	
-};
-static  struct pmu_info  axp228_ldo_info[] = {
-	{
-		.name          = "axp22_aldo1",   //vcca_33 aldo1
-		.min_uv          = 3300000,
-		.max_uv         = 3300000,
-	},
-	{
-		.name          = "axp22_aldo2",    //vcc_card aldo2
-		.min_uv          = 3300000,
-		.max_uv         = 3300000,
-	},
-	{
-		.name          = "axp22_aldo3",   //vcc_18 aldo3
-		.min_uv          = 1800000,
-		.max_uv         = 1800000,
-	},
-	{
-		.name          = "axp22_dldo1",   //vccio_wl  dldo1
-		.min_uv          = 2800000,
-		.max_uv         = 2800000,
-	},
-	{
-		.name          = "act_ldo8",//"axp22_dldo2",   //vcc28_cif dldo2
-		.min_uv          = 2800000,
-		.max_uv         = 2800000,
-	},
-	{
-		.name          = "axp22_dldo3",   //csi_avdd dldo3
-		.min_uv          = 2800000,
-		.max_uv         = 2800000,
-	},
-	{
-		.name          = "axp22_dldo4",   //vcc_jettaa dldo4
-		.min_uv          = 3300000,
-		.max_uv         = 3300000,
-	},
-	{
-		.name          = "axp22_eldo1",   //vdd_1v2 eldo1
-		.min_uv        = 1500000,// = 1200000,
-		.max_uv        = 1500000,//= 1200000,
-	},
-	{
-		.name          = "axp22_eldo2",   //vdd_jetta eldo2
-		.min_uv          = 1200000,
-		.max_uv         = 1200000,
-	},
-	{
-		.name          = "act_ldo3",//"axp22_eldo3",   //vcc18_cif eldo3
-		.min_uv          = 1800000,
-		.max_uv         = 1800000,
-	},
-	{
-		.name          = "axp22_dc5ldo",   //vdd_10 dc5ldo
-		.min_uv          = 1000000,
-		.max_uv         = 1000000,
-	},
-	{
-		.name          = "axp22_ldoio0",   //VCC_TP gpio0
-		.min_uv          = 3300000,
-		.max_uv         = 3300000,
-	},
- };
-
-#include "../mach-rk30/board-pmu-axp228.c"
-#endif
-
 #ifdef CONFIG_MFD_WM831X_I2C
 #define PMU_POWER_SLEEP 		RK30_PIN0_PA1 
 
@@ -2196,11 +2068,6 @@ static void __init rk30_i2c_register_board_info(void)
 #ifdef CONFIG_I2C1_RK30
 	i2c_register_board_info(1, i2c1_info, ARRAY_SIZE(i2c1_info));
 #endif
-#if defined (CONFIG_KP_AXP22)
-	if (env_get_u32("axp22_supproted", 0)) {
-		axp22_board_init();
-	}
-#endif
 #ifdef CONFIG_I2C2_RK30
 	i2c_register_board_info(2, i2c2_info, ARRAY_SIZE(i2c2_info));
 #endif
@@ -2260,13 +2127,6 @@ static void rk30_pm_power_off(void)
 	wm831x_set_bits(Wm831x,WM831X_GPIO_LEVEL,0x0001,0x0000);  //set sys_pwr 0
 	wm831x_device_shutdown(Wm831x);//wm8326 shutdown
 #endif
-#if defined (CONFIG_KP_AXP22)
-	if (pmic_is_axp228()) {
-		void yftech_axp_power_off(void);
-		yftech_axp_power_off();
-		return;
-	}
-#endif
 #if defined(CONFIG_REGULATOR_ACT8846)
        if (pmic_is_act8846()) {
                printk("enter dcdet===========\n");
@@ -2307,13 +2167,7 @@ int pmu_data_read(int index)
 		return tps65910_data_read((u8)index);
 	}
 #endif
-#if defined (CONFIG_KP_AXP22)
-	if (pmic_is_axp228()) {
-		extern int rk_get_system_battery_capacity(void);
-		int cap = rk_get_system_battery_capacity();
-		return (cap > 1) ? cap : 1;
-	}
-#endif
+
 	return -ENODEV;
 }
 
@@ -2329,11 +2183,7 @@ int pmu_data_write(int index, u8 value)
 		return tps65910_data_write((u8)index, value);
 	}
 #endif
-#if defined (CONFIG_KP_AXP22)
-	if (pmic_is_axp228()) {
-		return 0;
-	}
-#endif
+
 	return -ENODEV;
 }
 
@@ -2460,12 +2310,6 @@ static int charger_write(struct file *file, const char *buffer,unsigned long cou
 		int value = *buffer == '1';
 		printk("set charge mode %d\n", value);
 		rk30_charge_mode(value);
-#if defined (CONFIG_KP_AXP22)
-		if (pmic_is_axp228()) {
-			extern void yftech_charger_mode(bool enable);
-			yftech_charger_mode(!!value);
-		}
-#endif
 	}
 	return count;
 }
