@@ -273,10 +273,16 @@ static int rk29_backlight_pwm_resume(void)
 }
 
 static struct rk29_bl_info rk29_bl_info = {
-	.io_init = rk29_backlight_io_init,
+    .min_brightness = 65,
+    .max_brightness = 235,//150,
+    .brightness_mode = BRIGHTNESS_MODE_LINE, //BRIGHTNESS_MODE_CONIC,
+	.pre_div = 20000, //30 * 1000,  // pwm output clk: 30k;
+	.pwm_id = PWM_ID,
+	.bl_ref = PWM_EFFECT_VALUE,
+	.io_init   = rk29_backlight_io_init,
 	.io_deinit = rk29_backlight_io_deinit,
 	.pwm_suspend = rk29_backlight_pwm_suspend,
-	.pwm_resume = rk29_backlight_pwm_resume,
+	.pwm_resume  = rk29_backlight_pwm_resume,
 };
 
 static struct platform_device rk29_device_backlight = {
@@ -599,8 +605,11 @@ struct rk29fb_info lcdc1_screen_info = {
 };
 #endif
 
-int lcd_switch_lcdc(void) {
-	return env_get_u32("lcd_switch_lcdc", 1);
+int lcd_switch_lcdc(void)
+{
+	//return env_get_u32("lcd_switch_lcdc", 1);
+	
+	return 0;
 }
 
 static struct resource resource_fb[] = {
@@ -2047,7 +2056,7 @@ static void __init rk30_i2c_register_board_info(void)
 //end of i2c
 
 #define POWER_ON_PIN RK30_PIN0_PA0   //power_hold
-#define GPIO_5V_DRV		(env_get_u32("vcc_5v_ctrl", RK30_PIN0_PA3))    //5v for otg host && hdmi
+#define GPIO_5V_DRV  RK30_PIN0_PA3   //5v for otg host && hdmi
 #define CHARGE_PIN s_charge_gpio     //charge level pin
 #define POWER_IND_PIN s_power_ind_gpio   //power indicator
 static int s_power_ind_gpio = INVALID_GPIO;
@@ -2163,7 +2172,7 @@ int acc_supported(char * name)
 {
 	int supported = 0;
 	if(s_acc_dir == -1) {
-		const char * accs = env_get_str("acc_supproted", 0);
+		const char * accs = 0; //env_get_str("acc_supproted", 0);
 		supported = !accs || strstr(accs, name);
 	}
 	return supported;
@@ -2353,17 +2362,6 @@ static int backlight_write(struct file *file, const char *buffer,unsigned long c
 	return count;
 }
 
-
-static void __init misc_setup(void)
-{
-	rk29_bl_info.min_brightness = env_get_u32("lcd_bl_min", 65);
-	rk29_bl_info.max_brightness = env_get_u32("lcd_bl_max", 235);
-	rk29_bl_info.brightness_mode = env_get_u32("lcd_bl_mode", BRIGHTNESS_MODE_LINE);
-	rk29_bl_info.pre_div = env_get_u32("lcd_pwm_clock", 20000);
-	rk29_bl_info.bl_ref = env_get_u32("lcd_pwm_pol", PWM_EFFECT_VALUE);
-	rk29_bl_info.pwm_id = env_get_u32("lcd_pwm_id", PWM_ID);
-}
-
 //android init
 static char * s_initrc_buffer = NULL;
 static int s_initrc_length = 0;
@@ -2498,7 +2496,8 @@ static void __init machine_rk30_board_init(void)
 
 #endif
 
-	s_lcd_en2 = env_get_u32("lcd_en2_pgio", s_lcd_en2);
+	//s_lcd_en2 = env_get_u32("lcd_en2_pgio", s_lcd_en2);
+	
 	if(s_lcd_en2 == s_lcd_en) {
 		s_lcd_en = INVALID_GPIO;
 	}
@@ -2512,12 +2511,10 @@ static void __init machine_rk30_board_init(void)
 	spi_register_board_info(board_spi_devices, ARRAY_SIZE(board_spi_devices));
 	platform_add_devices(devices, ARRAY_SIZE(devices));
 
-	usb_detect = env_get_u32("power_usb_detect", INVALID_GPIO);
+	usb_detect = INVALID_GPIO;
 	if(usb_detect != INVALID_GPIO) {
 		board_usb_detect_init(usb_detect);
 	}
-
-	default_sdmmc0_data.det_pin_info.enable = env_get_u32("mmc_cd_polarity", default_sdmmc0_data.det_pin_info.enable);
 
 #ifdef CONFIG_WIFI_CONTROL_FUNC
 	rk29sdk_wifi_bt_gpio_control_init();
@@ -2530,8 +2527,15 @@ static void __init machine_rk30_board_init(void)
 #if defined(CONFIG_MT5931_MT6622)
 		clk_set_rate(clk_get_sys("rk_serial.0", "uart"), 24*1000000);
 #endif		
-	misc_setup();
+
 	proc_setup();
+}
+
+int get_lcd_ipp_rotation()
+{
+	//return env_get_u32("lcd_ipp_rotation", 0);
+	
+	return 270;
 }
 
 extern void yf_camera_init(void);
@@ -2559,7 +2563,7 @@ static void __init rk30_reserve(void)
 	resource_fb[1].end = resource_fb[1].start + RK30_FB0_MEM_SIZE - 1;
 #endif
 
-if(env_get_u32("lcd_ipp_rotation", 0)) {
+if(get_lcd_ipp_rotation()) {
 	resource_fb[2].start = board_mem_reserve_add("fb2 buf",get_fb_size());
 	resource_fb[2].end = resource_fb[2].start + get_fb_size() - 1;
 }
@@ -2740,7 +2744,7 @@ static struct cpufreq_frequency_table dvfs_ddr_table[] = {
 void __init board_ddr_init(void)
 {
 	int mode;
-	int freq = env_get_u32("ddr_max_freq", DDR_FREQ) * 1000 + DDR_FREQ_NORMAL;
+	int freq = DDR_FREQ * 1000 + DDR_FREQ_NORMAL;
 	int voltage = 0;
 	struct cpufreq_frequency_table * table = dvfs_ddr_table;
 	while(table->frequency != CPUFREQ_TABLE_END) {
