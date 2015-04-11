@@ -103,7 +103,6 @@ static inline void rk29_bl_max_brightness_check(struct rk29_bl_info *rk29_bl_inf
 		rk29_bl_info->max_brightness = BL_STEP;
 }	
 
-// 均匀调节亮度
 int yftech_rk29_bl_val_scalor_line(struct rk29_bl_info *rk29_bl_info,int brightness)
 {
 	#define min_progress_bar	10
@@ -485,7 +484,7 @@ static int rk29_backlight_probe(struct platform_device *pdev)
 
 	rk29_bl->props.power = FB_BLANK_UNBLANK;
 	rk29_bl->props.fb_blank = FB_BLANK_UNBLANK;
-	rk29_bl->props.brightness = env_get_u32("lcd_bl_def", BL_STEP / 2);
+	rk29_bl->props.brightness = BL_STEP / 2;
 	rk29_bl->props.state = BL_CORE_DRIVER1;		
 
 	schedule_delayed_work(&rk29_backlight_work, msecs_to_jiffies(rk29_bl_info->delay_ms));

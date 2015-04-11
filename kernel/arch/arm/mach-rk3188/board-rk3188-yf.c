@@ -185,22 +185,16 @@ static struct spi_board_info board_spi_devices[] = {
 #ifdef  LCD_DISP_ON_PIN
 #define BL_EN_PIN         RK30_PIN0_PA2
 #define BL_EN_VALUE       GPIO_HIGH
+
 static int s_bl_suspend;
+
 #endif
-
-static int s_lcd_en2 = INVALID_GPIO;
-
 static int rk29_backlight_io_init(void)
 {
 	int ret = 0;
 
-	if(s_lcd_en2 != INVALID_GPIO) {
-		gpio_direction_output(s_lcd_en2, GPIO_LOW);
-		msleep(50);
-	}
 	iomux_set(PWM_MODE);
 #ifdef  LCD_DISP_ON_PIN
-	msleep(100);
 	ret = gpio_request(BL_EN_PIN, NULL);
 	if (ret != 0) {
 		gpio_free(BL_EN_PIN);
@@ -224,10 +218,6 @@ static int rk29_backlight_io_deinit(void)
 	pwm_gpio = iomux_mode_to_gpio(PWM_MODE);
 	gpio_request(pwm_gpio, NULL);
 	gpio_direction_output(pwm_gpio, GPIO_LOW);
-	if(s_lcd_en2 != INVALID_GPIO) {
-		msleep(50);
-		gpio_direction_output(s_lcd_en2, GPIO_HIGH);
-	}
 	return ret;
 }
 
@@ -235,7 +225,7 @@ static int rk29_backlight_pwm_suspend(void)
 {
 	int ret = 0, pwm_gpio;
 
-	s_bl_suspend = 1;
+	s_bl_suspend = 1; 
 	pwm_gpio = iomux_mode_to_gpio(PWM_MODE);
 	if (gpio_request(pwm_gpio, NULL)) {
 		printk("func %s, line %d: request gpio fail\n", __FUNCTION__, __LINE__);
@@ -246,10 +236,6 @@ static int rk29_backlight_pwm_suspend(void)
 	gpio_direction_output(BL_EN_PIN, 0);
 	gpio_set_value(BL_EN_PIN, !BL_EN_VALUE);
 #endif
-	if(s_lcd_en2 != INVALID_GPIO) {
-		msleep(50);
-		gpio_direction_output(s_lcd_en2, GPIO_HIGH);
-	}
 	return ret;
 }
 
@@ -257,18 +243,14 @@ static int rk29_backlight_pwm_resume(void)
 {
 	int pwm_gpio = iomux_mode_to_gpio(PWM_MODE);
 
-	if(s_lcd_en2 != INVALID_GPIO) {
-		gpio_direction_output(s_lcd_en2, GPIO_LOW);
-		msleep(50);
-	}
 	gpio_free(pwm_gpio);
 	iomux_set(PWM_MODE);
 #ifdef  LCD_DISP_ON_PIN
-	msleep(150);
+	msleep(30);
 	gpio_direction_output(BL_EN_PIN, 1);
 	gpio_set_value(BL_EN_PIN, BL_EN_VALUE);
 #endif
-	s_bl_suspend = 0;
+	s_bl_suspend = 0; 
 	return 0;
 }
 
@@ -488,8 +470,7 @@ static struct sensor_platform_data cm3217_info = {
 #define LCD_CS_PIN         INVALID_GPIO
 #define LCD_CS_VALUE       GPIO_HIGH
 
-static int s_lcd_en = RK30_PIN0_PB0;
-#define LCD_EN_PIN         s_lcd_en
+#define LCD_EN_PIN         RK30_PIN0_PB0
 #define LCD_EN_VALUE       GPIO_LOW
 
 static int rk_fb_io_init(struct rk29_fb_setting_info *fb_setting)
@@ -2078,9 +2059,6 @@ static void rk30_pm_restart(char mode, const char *cmd)
 {
 	printk(KERN_ERR "rk30_pm_restart start...\n");
 	gpio_direction_output(LCD_EN_PIN, !LCD_EN_VALUE);
-	if(s_lcd_en2 != INVALID_GPIO) {
-		gpio_direction_output(s_lcd_en2, GPIO_HIGH);
-	}
 
 	arm_machine_restart(mode, cmd);
 }
@@ -2495,12 +2473,7 @@ static void __init machine_rk30_board_init(void)
 	platform_device_register(&device_ssd2828);
 
 #endif
-
-	//s_lcd_en2 = env_get_u32("lcd_en2_pgio", s_lcd_en2);
-	
-	if(s_lcd_en2 == s_lcd_en) {
-		s_lcd_en = INVALID_GPIO;
-	}
+	 
 	pm_power_off = rk30_pm_power_off;
 	arm_pm_restart = rk30_pm_restart;
 	
