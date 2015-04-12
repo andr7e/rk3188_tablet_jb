@@ -201,17 +201,18 @@ static int add_device(void) {
        }
        printk("Find cw2015 version=%#x!\n", data);
 
-       platform_data.dc_det_level = env_get_u32("power_ac_level", 1);
-       platform_data.dc_det_pin   = env_get_u32("power_ac_gpio", INVALID_GPIO);
+       platform_data.dc_det_level = 0;
+       platform_data.dc_det_pin   = RK30_PIN0_PB2;
+       
        if(platform_data.dc_det_pin == INVALID_GPIO) {
                platform_data.dc_det_pin = 0;
                printk("Must be set power_ac_gpio!");
        }
 
-       platform_data.chg_ok_level = env_get_u32("power_charge_level", 1);
-       platform_data.chg_ok_pin   = env_get_u32("power_charge_gpio", INVALID_GPIO);
+       platform_data.chg_ok_level = 1;
+       platform_data.chg_ok_pin   = RK30_PIN0_PA6;
 
-		capacity = env_get_u32("battery_capacity", 4700);
+		capacity = 4700;
 		printk("cw2015 use %dmAH!\n", capacity);
 		switch (capacity) {
 			default:
